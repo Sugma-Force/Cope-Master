@@ -1,0 +1,2 @@
+supported format 
+username:password@hostname:port

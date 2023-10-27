@@ -1,0 +1,3 @@
+supported frormats...
+1. EMAIL:PASS:TOKEN
+2. TOKEN
