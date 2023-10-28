@@ -22,7 +22,13 @@ class gui():
     def joiner_menu():
         gui.main_title(show=False)
         invite = str(input(pystyle.Center.XCenter("Invite: ", 30)))
-        token_joiner(invite)
+        print()
+        gui.make_menu("Normal Joiner", "Capsolver Joiner")
+        choice = str(input(pystyle.Center.XCenter("Choice: ", 30)))
+        if choice == "1":
+            token_joiner(invite)
+        else:
+            captcha_joiner(invite)
         gui.main_menu()
     
     def spammer_menu():
