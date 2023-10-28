@@ -38,7 +38,8 @@ class Output:
         this.color_map = {
             "info": (Fore.BLUE, "[*]"),
             "bad": (Fore.RED, "[-]"),
-            "good": (Fore.GREEN, "[+]")
+            "good": (Fore.GREEN, "[+]"),
+            "cap": (Fore.MAGENTA, "[CAP]")
         }
 
     def log(this, *args, **kwargs):
@@ -161,7 +162,7 @@ class utility:
         if res_status_code == 200:
             Output("good").log(f"Success -> {token[:60]} {Fore.LIGHTBLACK_EX}({res_status_code})")
         elif res_status_code == 429:
-            passDecimal
+            pass
         elif res_text.startswith('{"captcha_key"'):
             Output("bad").log(f"Error -> {token[:60]} {Fore.LIGHTBLACK_EX}({res_status_code}) {Fore.RED}(Captcha)")
         elif res_text.startswith('{"message": "401: Unauthorized'):
@@ -195,3 +196,52 @@ class utility:
             ids = f.read().strip().splitlines()
         ids = [idd for idd in ids if idd not in [" ", "", "\n"]]
         return ids
+
+class Captcha:
+    def payload(self, proxy:str=None, rqdata:str=None) -> None:
+        self.captchaKey = "YOUR_CAPSOLVER_KEY"
+        p = {
+            "clientKey":self.captchaKey,
+            "task": {
+                "websiteURL":"https://discord.com/",
+                "websiteKey":"a9b5fb07-92ff-493f-86fe-352a2803b3df",
+                "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+                "enterprisePayload":{
+                    "rqdata": rqdata,
+                }
+            }
+        }
+        p['appId']="E68E89B1-C5EB-49FE-A57B-FBE32E34A2B4"
+        p['task']['type'] = "HCaptchaTurboTask"
+        p['task']['proxy'] = proxy 
+        return p
+
+
+    def __init__(self, proxy:str, siteKey:str, siteUrl:str, rqdata:str) -> None:
+        self.debug = False
+        self.proxy = proxy
+        self.siteKey = siteKey
+        self.siteUrl = siteUrl
+        self.rqdata = rqdata
+
+    def solveCaptcha(self) -> str:
+        r = requests.post(f"https://api.capsolver.com/createTask",json=self.payload(self.proxy, self.rqdata))
+        try:
+            if r.json().get("taskId"):
+                taskid = r.json()["taskId"]
+            else:
+                return None
+        except:
+            Output("bad").log("Couldn't get task id.",r.text)
+            return None
+        while True:
+            try:
+                r = requests.post(f"https://api.capsolver.com/getTaskResult",json={"clientKey":self.captchaKey,"taskId":taskid})
+                if r.json()["status"] == "ready":
+                    key = r.json()["solution"]["gRecaptchaResponse"]
+                    return key
+                elif r.json()['status'] == "failed":
+                    return None
+            except:
+                Output("bad").log("Failed to get status.",r.text)
+                return None
