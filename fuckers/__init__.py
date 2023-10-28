@@ -6,4 +6,5 @@ from .utils.id_scraper import *
 
 #options
 from .options.token_joiner import *
+from .options.captcha_joiner import *
 from .options.channel_spammer import *
